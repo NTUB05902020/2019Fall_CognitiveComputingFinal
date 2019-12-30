@@ -1,6 +1,15 @@
 import os, sys, cv2
 import numpy as np
 
+try:
+    video_in, out_dir, face_cas_path, eye_cas_path = str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3]), str(sys.argv[4])
+except IndexError:
+    print('Format: python {} [video_in] [out_dir]'.format(sys.argv[0]))
+
+
+face_cascade = cv2.CascadeClassifier(face_cas_path)
+eye_cascade = cv2.CascadeClassifier(eye_cas_path)
+
 def isOverlap(reg0, reg1):
     (x0,y0,w0,h0), (x1,y1,w1,h1) = reg0, reg1
     if x0<=x1 and x1<=x0+w0  or  x1<=x0 and x0<=x1+w1:
@@ -33,7 +42,6 @@ def detectOrientation(img):
     facess = []
     for i,gray in enumerate(grays):
         faces = face_cascade.detectMultiScale(gray)
-        
         if len(faces) == 1: facess.append(faces)
         elif len(faces) > 1:
             faces = sortAndClearOverlap(faces)
@@ -41,7 +49,7 @@ def detectOrientation(img):
             elif i != 0: facess.append([])
             else: facess.append(faces)
         else: facess.append([])
-        
+       
         """
         outputImg = np.copy(img)
         if i == 0:
@@ -54,7 +62,7 @@ def detectOrientation(img):
             for x,y,w,h in facess[-1]: cv2.rectangle(outputImg, (y,outputImg.shape[0]-x-1), (y+h,outputImg.shape[0]-x-w-1), (0,0,255), 4)
         cv2.imwrite('output{}.jpg'.format(i), outputImg)
         """
-    
+   
     orient, maxArea = None, -1
     for i,faces in enumerate(facess):
         if len(faces) == 0: continue
@@ -67,16 +75,10 @@ def detectOrientation(img):
     return (-1,None) if orient == None else (orient,facess[orient])
 
 
-try:
-    video_in, out_dir = str(sys.argv[1]), str(sys.argv[2])
-except IndexError:
-    print('Format: python {} [video_in] [out_dir]'.format(sys.argv[0]))
+
 
 os.system('rm -fr {}'.format(out_dir))
 os.mkdir(out_dir)
-
-face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
 
 # First judge face orientation in video
 """
@@ -91,6 +93,7 @@ face_orientation:
                  2:                           180
                  3:                           270
 """
+
 face_leftright, face_orient = None, None
 cnt, vid = 0, cv2.VideoCapture(video_in)
 while True:
@@ -136,7 +139,7 @@ while True:
     if ret:
         cnt += 1
         gray_frame = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        for i in range(face_orient): gray_frame = cv2.rot90(gray_frame)
+        for i in range(face_orient): gray_frame = np.rot90(gray_frame)
         
         faces = face_cascade.detectMultiScale(gray_frame, 1.3, 5)
         if len(faces) == 0:
