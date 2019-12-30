@@ -42,7 +42,7 @@ def detectOrientation(img):
             else: facess.append(faces)
         else: facess.append([])
         
-        
+        """
         outputImg = np.copy(img)
         if i == 0:
             for x,y,w,h in facess[-1]: cv2.rectangle(outputImg, (x,y), (x+w,y+h), (0,0,255), 4)
@@ -53,7 +53,7 @@ def detectOrientation(img):
         else:
             for x,y,w,h in facess[-1]: cv2.rectangle(outputImg, (y,outputImg.shape[0]-x-1), (y+h,outputImg.shape[0]-x-w-1), (0,0,255), 4)
         cv2.imwrite('output{}.jpg'.format(i), outputImg)
-        
+        """
     
     orient, maxArea = None, -1
     for i,faces in enumerate(facess):
