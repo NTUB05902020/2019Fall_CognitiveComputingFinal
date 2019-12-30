@@ -4,7 +4,7 @@ import numpy as np
 try:
     video_in, out_dir, face_cas_path, eye_cas_path = str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3]), str(sys.argv[4])
 except IndexError:
-    print('Format: python {} [video_in] [out_dir]'.format(sys.argv[0]))
+    print('Format: python {} [video_in] [out_dir] [face_cas_path] [eye_cas_path]'.format(sys.argv[0]))
 
 
 face_cascade = cv2.CascadeClassifier(face_cas_path)
