@@ -5,6 +5,7 @@ import numpy as np
 dest = sys.argv[1]
 
 _, dirs, _ = list(os.walk(dest))[0]
+dirs.sort()
 for AU_dir in dirs:
 	_, indice, _ = list(os.walk(dest + AU_dir))[0]
 	indice.sort()
