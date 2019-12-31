@@ -77,8 +77,8 @@ def detectOrientation(img):
 
 
 
-os.system('rm -fr {}'.format(out_dir))
-os.mkdir(out_dir)
+#os.system('rm -fr {}'.format(out_dir))
+#os.mkdir(out_dir)
 
 # First judge face orientation in video
 """
