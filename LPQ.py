@@ -27,7 +27,7 @@ class LPQ(object):
         distances.flat[::distances.shape[0] + 1] = 0.0
         return np.sqrt(distances)
 
-    def __call__(self,X):
+    def getFeature(self,X):
         f = 1.0
         x = np.arange(-self.radius,self.radius+1)
         n = len(x)
@@ -88,7 +88,29 @@ class LPQ(object):
         h, b  = np.histogram(B, bins=256, range = (0,255))
 
         return h
-
+    
+    def blockshaped(arr, nrows, ncols):
+        h, w = arr.shape
+        assert h % nrows == 0, "{} rows is not evenly divisble by {}".format(h, nrows)
+        assert w % ncols == 0, "{} cols is not evenly divisble by {}".format(w, ncols)
+        return (arr.reshape(h//nrows, nrows, -1, ncols)
+                   .swapaxes(1,2)
+                   .reshape(-1, nrows, ncols))
+    
+    def __call__(self, img):
+        h, w = img.shape
+        pad_height = 10 * (h // 10 + (h % 10 > 0))
+        pad_weight = 10 * (w // 10 + (w % 10 > 0))
+        img = np.hstack([img, np.zeros([h, pad_weight-w])])
+        img = np.vstack([img, np.zeros([pad_height - h, pad_weight])])
+        
+        all_hist, blocks = [], blockshaped(img, pad_height//10, pad_weight//10)
+        for block in blocks:
+            LPQ = self.getFeature(block)
+            LPQ.resize((256))
+            all_hist.append(LPQ)
+        return np.hstack(all_hist)
+    
     def __repr__(self):
         return "LPQ (radius=%s)" % (self.radius)
         
