@@ -221,17 +221,70 @@ def LPQ_TOP(Volume, weight_vec = np.array([[1, 1, 1]]), \
 
 	return Feature_vector
 
+def LPQ_TOP_Grid(img_seq):
+	h, w, t = img_seq.shape
+	numh = 5
+	numw = 5
+	numt = 3
+	h = (h // numh + (h % numh > 0))
+	w = (w // numw + (w % numw > 0))
+	t = (t // numt + (t % numt > 0))
+	features = []
+	for i in range(numh):
+		for j in range(numw):
+			for k in range(numt):
+				if i == numh-1:
+					if j == numw-1:
+						if k == numt-1:
+							img_seq_sub = img_seq[i*h:, j*w:,k*t:]
+						else:
+							img_seq_sub = img_seq[i*h:, j*w:,k*t:(k+1)*t]
+					else:
+						if k == numt-1:
+							img_seq_sub = img_seq[i*h:, j*w:(j+1)*w,k*t:]
+						else:
+							img_seq_sub = img_seq[i*h:, j*w:(j+1)*w,k*t:(k+1)*t]
+				else:
+					if j == numw-1:
+						if k == numt-1:
+							img_seq_sub = img_seq[i*h:(i+1)*h, j*w:,k*t:]
+						else:
+							img_seq_sub = img_seq[i*h:(i+1)*h, j*w:,k*t:(k+1)*t]
+					else:
+						if k == numt-1:
+							img_seq_sub = img_seq[i*h:(i+1)*h, j*w:(j+1)*w,k*t:]
+						else:
+							img_seq_sub = img_seq[i*h:(i+1)*h, j*w:(j+1)*w,k*t:(k+1)*t]
+				img_seq_sub = img_seq_sub.reshape((img_seq_sub.shape[0],img_seq_sub.shape[1],img_seq_sub.shape[2],1))
+				if img_seq_sub.shape[0] < 3:
+					continue
+				if img_seq_sub.shape[0] < 5:
+					winsize = img_seq_sub.shape[0]
+					features.append(LPQ_TOP(img_seq_sub, winSize = np.array([winsize, 5.0, 5.0])))
+				else:
+					features.append(LPQ_TOP(img_seq_sub))
+	features = np.array(features)
+	features = features.reshape((features.shape[0]*features.shape[1],))
+	if features.shape[0] != 755 *numw*numt*numh:
+		return None
+	return features
+
 if __name__ == '__main__':
-	image1 = io.imread('4.jpg')
-	image2 = io.imread('5.jpg')
-	image3 = io.imread('6.jpg')
-	image4 = io.imread('7.jpg')
-	image5 = io.imread('8.jpg')
-	image6 = io.imread('9.jpg')
+	image1 = io.imread('../4.jpg')
+	image2 = io.imread('../5.jpg')
+	image3 = io.imread('../6.jpg')
+	image4 = io.imread('../7.jpg')
+	image5 = io.imread('../8.jpg')
+	image6 = io.imread('../9.jpg')
+	image7 = io.imread('../10.jpg')
+	image8 = io.imread('../11.jpg')
+	image9 = io.imread('../12.jpg')
+	image10 = io.imread('../13.jpg')
 	image_seq = np.array([rgb2gray(image1), rgb2gray(image2), rgb2gray(image3),\
-		rgb2gray(image4), rgb2gray(image5), rgb2gray(image6)])
-	image_seq = image_seq.reshape((image_seq.shape[0],image_seq.shape[1],image_seq.shape[2],1))
-	print(LPQ_TOP(image_seq).shape)
+		rgb2gray(image4), rgb2gray(image5), rgb2gray(image6), rgb2gray(image7),\
+		rgb2gray(image8), rgb2gray(image9), rgb2gray(image10)])
+	#image_seq = image_seq.reshape((image_seq.shape[0],image_seq.shape[1],image_seq.shape[2],1))
+	print(LPQ_TOP_Grid(image_seq).shape)
 
 
 
