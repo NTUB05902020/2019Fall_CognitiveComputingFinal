@@ -5,7 +5,7 @@ try:
     au_name, json_path, in_dir, split_log, model_path = str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3]), str(sys.argv[4]), str(sys.argv[5])
 except IndexError:
     print('Format: python {} [au_name] [json_path] [in_dir] [split_log] [model_path]'.format(sys.argv[0]))
-    print('      : python {} [au_name] [json_path] [in_dir] [split_log] [model_path] [batchSize]'.format(sys.argv[0]))
+    print('      : python {} [au_name] [json_path] [in_dir] [split_log] [model_path] [batchNum]'.format(sys.argv[0]))
     sys.exit(1)
 
 if not os.path.exists(json_path):
@@ -61,31 +61,41 @@ print('Training:     {:>6d}    {:>6d}'.format(len(trainp_vids), len(trainn_vids)
 print(' Testing:     {:>6d}    {:>6d}'.format(len(testp_vids), len(testn_vids)))
 
 feature_dim = np.load(os.path.join(in_dir, '{}.npy'.format(trainp_vids[0]))).shape[1]
-trainX, testX, trainY, testY = np.empty((0,feature_dim)), np.empty((0,feature_dim)), np.empty((0,1)), np.empty((0,1))
 
-trainpf_num, trainnf_num, testpf_num, testnf_num = 0, 0, 0, 0
+trainpX, trainnX, testX = np.empty((0,feature_dim)), np.empty((0,feature_dim))
+testX, testY = np.empty((0,feature_dim)), np.empty((0,1))
+testpf_num, testnf_num = 0, 0
+
 for trainp_vid in trainp_vids:
     features = np.load(os.path.join(in_dir, '{}.npy'.format(trainp_vid)))
-    trainX = np.append(trainX, features, axis=0)
-    trainY, trainpf_num = np.append(trainY, np.ones((features.shape[0],1))), trainpf_num+features.shape[0]
+    trainpX = np.append(trainpX, features, axis=0)
+
 for trainn_vid in trainn_vids:
     features = np.load(os.path.join(in_dir, '{}.npy'.format(trainn_vid)))
-    trainX = np.append(trainX, features, axis=0)
-    trainY, trainnf_num = np.append(trainY, np.zeros((features.shape[0],1))), trainnf_num+features.shape[0]
+    trainnX = np.append(trainnX, features, axis=0)
+
 for testp_vid in testp_vids:
     features = np.load(os.path.join(in_dir, '{}.npy'.format(testp_vid)))
     testX = np.append(testX, features, axis=0)
-    testY, testpf_num = np.append(testY, np.ones((features.shape[0],1))), testpf_num+features.shape[0]
+    testY = np.append(testY, np.ones((features.shape[0],1)), axis=0)
+    testpf_num += features.shape[0]
+    
 for testn_vid in testn_vids:
     features = np.load(os.path.join(in_dir, '{}.npy'.format(testn_vid)))
     testX = np.append(testX, features, axis=0)
-    testY, testnf_num = np.append(testY, np.zeros((features.shape[0],1))), testnf_num+features.shape[0]
+    testY = np.append(testY, np.ones((features.shape[0],1)), axis=0)
+    testnf_num += features.shape[0]
 
-mean_x = np.sum(trainX, axis = 0) / np.size(trainX,0)
-var_x = np.var(trainX, axis = 0)
+trainpf_num, trainnf_num = trainpX.shape[0], trainnX.shape[0]
+trainX, trainY = np.append(trainpX, trainnX), np.append(np.ones((trainpf_num,1)), np.zeros((trainnf_num,1)))
+
+mean_x, var_x = np.mean(trainX, axis=0), np.var(trainX, axis=0)
 var_x[var_x == 0] = 1e-10
-trainX = (trainX - mean_x) / np.sqrt(var_x)
-testX = (testX - mean_x) / np.sqrt(var_x)
+std_x = np.sqrt(var_x)
+
+trainpX = (trainpX-mean_x) / std_x
+trainnX = (trainnX-mean_x) / std_x
+testX = (testX-mean_x) / std_x
 np.save(au_name + '_meanX.npy', mean_x)
 np.save(au_name + '_varX.npy', var_x)
 
@@ -94,11 +104,13 @@ print('Training:       {:>6d}    {:>6d}'.format(trainpf_num, trainnf_num))
 print(' Testing:       {:>6d}    {:>6d}'.format(testpf_num, testnf_num))
 
 try:
-    batchSize = int(sys.argv[6])
+    batchNum = int(sys.argv[6])
 except IndexError:
-    batchSize = 128
-print('\nBatchSize:  {:>4d}\n'.format(batchSize))
-divided, batchNum = trainX.shape[0]%batchSize == 0, trainX.shape[0]//batchSize
+    batchNum = 128
+print('\nBatchNum:  {:>4d}\n'.format(batchNum))
+
+dividedp, batchSizep = trainpX.shape[0]&batchNum == 0, trainpX.shape[0]//batchNum
+dividedn, batchSizen = trainnX.shape[0]&batchNum == 0, trainnX.shape[0]//batchNum
 
 from time import time
 import pickle
@@ -122,14 +134,23 @@ epoch = 20
 for i in range(epoch):
     print('epoch = {}'.format(i), end='   ')
     time_seed = int(time())
-    trainX, trainY = shuffle(trainX, trainY, random_state=time_seed)
-    indStart, indEnd = 0, batchNum
+    trainpX = shuffle(trainpX, random_state=time_seed)
+    trainnX = shuffle(trainnX, random_state=time_seed)
+    
+    indSp, indEp = 0, batchSizep
+    indSn, indEn = 0, batchSizen
     
     for j in range(1,batchNum):
-        X, Y = trainX[indStart:indEnd], trainY[indStart:indEnd]
-        indStart, indEnd = indStart+batchSize, indEnd+batchSize
+        X = trainpX[indSp:indEp] + trainnX[indSn:indEn]
+        Y = np.append(np.ones((batchSizep,1)), np.zeros((batchSizen,1)))
+        indSp, indEp = indSp+batchSizep, indEp+batchSizep
+        indSn, indEn = indSp+batchSizen, indEn+batchSizen
         svm_model.fit(X, Y)
-    if not divided: svm_model.fit(trainX[indStart:], trainY[indStart:])
+    
+    if not divided:
+        X = trainpX[indSp:] + trainnX[indSn:]
+        Y = np.append(np.ones(trainpX.shape[0]-indSp), np.zeros(trainnX.shape[0]-indSn))
+        svm_model.fit(X, Y)
     
     trainY_ = svm_model.predict(trainX)
     train_errorRate.append(np.count_nonzero(np.not_equal(trainY, trainY_)) / np.size(trainY) * 100)
