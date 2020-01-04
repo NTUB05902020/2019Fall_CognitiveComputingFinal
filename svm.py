@@ -127,5 +127,5 @@ with open(model_path, 'wb') as writer: pickle.dump(svm_model, writer)
 from matplotlib import pyplot as plt
 plt.plot(train_errorRate, '.', label='train')
 plt.plot(test_errorRate, '-', label='test')
-legend()
+#plt.legend()
 plt.savefig('errorRate.png')
