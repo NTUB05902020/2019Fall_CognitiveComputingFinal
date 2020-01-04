@@ -109,7 +109,7 @@ svm_model = None
 if os.path.exists(model_path):
     with open(model_path, 'rb') as reader: svm_model = pickle.load(reader)
 else:
-    svm_model = SVC(kernel='rbf', probability=True)
+    svm_model = SVC(kernel='linear', probability=True)
 
 train_errorRate, test_errorRate = [], []
 if os.path.exists('train_errorRate{}.npy'.format(au_name)):
