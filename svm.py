@@ -45,8 +45,9 @@ else:
         else: n_vids.append(vid)
     
     p_num, n_num = len(p_vids), len(n_vids)
-    testp_num, testn_num = p_num//8, n_num//8
-    trainp_num, trainn_num = p_num-testp_num, n_num-testn_num
+    min_num = min(p_num, n_num)
+    trainp_num, trainn_num = min_num//8 * 7, min_num//8 * 7
+    testp_num, testn_num = p_num-trainp_num, n_num-trainn_num
     
     trainp_vids, testp_vids = p_vids[:trainp_num], p_vids[trainp_num:]
     trainn_vids, testn_vids = n_vids[:trainn_num], n_vids[trainn_num:]
@@ -117,7 +118,7 @@ if os.path.exists('test_errorRate.npy'):
     test_errorRate = np.load('test_errorRate.npy').tolist()
 
 # epoch可調
-epoch = 10
+epoch = 20
 for i in range(epoch):
     print('epoch = {}'.format(i), end='   ')
     time_seed = int(time())
