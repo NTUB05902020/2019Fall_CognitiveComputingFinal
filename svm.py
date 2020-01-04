@@ -126,7 +126,7 @@ for i in range(epoch):
     
     testY_ = svm_model.predict(testX)
     test_errorRate.append(np.count_nonzero(np.not_equal(testY,testY_)) / np.size(testY) * 100)
-    print('{:.4f}    {:.4f}'.format(train_errorRate, test_errorRate))
+    print('{:.4f}    {:.4f}'.format(train_errorRate[-1], test_errorRate[-1]))
 with open(model_path, 'wb') as writer: pickle.dump(svm_model, writer)
 
 np.save('train_errorRate.npy', np.array(train_errorRate))
