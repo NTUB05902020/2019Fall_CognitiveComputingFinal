@@ -223,9 +223,9 @@ def LPQ_TOP(Volume, weight_vec = np.array([[1, 1, 1]]), \
 
 def LPQ_TOP_Grid(img_seq):
 	h, w, t = img_seq.shape
-	numh = 5
-	numw = 5
-	numt = 3
+	numh = 1
+	numw = 10
+	numt = 10
 	h = (h // numh + (h % numh > 0))
 	w = (w // numw + (w % numw > 0))
 	t = (t // numt + (t % numt > 0))
@@ -265,7 +265,7 @@ def LPQ_TOP_Grid(img_seq):
 					features.append(LPQ_TOP(img_seq_sub))
 	features = np.array(features)
 	features = features.reshape((features.shape[0]*features.shape[1],))
-	if features.shape[0] != 755 *numw*numt*numh:
+	if features.shape[0] != 765 *numw*numt*numh:
 		return None
 	return features
 

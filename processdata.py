@@ -1,7 +1,8 @@
 import os
 import xml.etree.cElementTree as ET
 import shutil
-
+import sys
+import json
 """def CutFace(video_in, out_dir):	
 	vid = cv2.VideoCapture(video_in)
 	face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
@@ -25,7 +26,7 @@ import shutil
 	for i in range(start, end): os.system('mv {}/{:03d}.jpg {}/{:03d}.jpg'.format(out_dir, i, out_dir, i-start))"""
 
 ## 抓MMI dataset的所有index以及其對應的xml檔
-path = "../MMI/MMI_Emotions_dataset/Sessions/"
+path = sys.argv[1]
 
 _, dirs, _ = list(os.walk(path))[0]
 
@@ -53,6 +54,8 @@ for index, file in dict_file.items():
 			dict_AU[elem.attrib['Number']].append(index)
 
 #print(dict_AU.keys())
+with open('dict_AU.json','w') as f:
+	json.dump(dict_AU,f)
 '''dest = "../MMI_arrange/"
 os.mkdir(dest)
 for AU_num in dict_AU.keys():
@@ -66,7 +69,7 @@ for AU_num in dict_AU.keys():
 				shutil.copy(full_file_name, dest + AU_num + '/' + index)'''
 
 import cv2
-dest = "../MMI_arrange/"
+dest = sys.argv[1]
 """for AU_num in dict_AU.keys():
 	for index in dict_AU[AU_num]:
 		src_files = os.listdir(dest + AU_num + '/' + index)
@@ -78,9 +81,21 @@ dest = "../MMI_arrange/"
 				#os.system('rm '+full_file_name)
 				os.system('python image_align.py '+dest + AU_num + '/' + index)"""
 
-for AU_num in dict_AU.keys():
-	for index in dict_AU[AU_num]:
-		os.system('python image_align.py '+dest + AU_num + '/' + index + '/')
+_, indice, _ = list(os.walk(dest))[0]
+for index in indice:
+	print(dest + index)
+	files = os.listdir(dest + index)
+	for file in files:
+		if file[-4:] != '.avi':
+			full_file_name = os.path.join(dest + index, file)
+			os.system('rm '+full_file_name)
+			continue
+		full_file_name = os.path.join(dest + index, file)
+		os.system('python newCutFrames.py ' + full_file_name + ' ' + dest + index\
+			+ ' haarcascade_frontalface_default.xml haarcascade_eye.xml')
+		os.system('rm '+full_file_name)
+for index in indice:
+	os.system('python image_align.py '+ dest + index + '/')
 
 
 
