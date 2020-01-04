@@ -102,6 +102,11 @@ else:
     svm_model = SVC(kernel='rbf', probability=True)
 
 train_errorRate, test_errorRate = [], []
+if os.path.exists('train_errorRate.npy'):
+    train_errorRate = np.load('train_errorRate.npy').tolist()
+if os.path.exists('test_errorRate.npy'):
+    test_errorRate = np.load('test_errorRate.npy').tolist()
+
 print(trainX.shape, trainY.shape)
 # epoch可調
 epoch = 10
@@ -122,7 +127,7 @@ for i in range(epoch):
     
     testY_ = svm_model.predict(testX)
     test_errorRate.append(np.count_nonzero(np.not_equal(testY,testY_)) / np.size(testY) * 100)
-    print('{.4f}    {.4f}'.format(train_errorRate, test_errorRate))
+    print('{:.4f}    {:.4f}'.format(train_errorRate, test_errorRate))
 with open(model_path, 'wb') as writer: pickle.dump(svm_model, writer)
 
 np.save('train_errorRate.npy', np.array(train_errorRate))
