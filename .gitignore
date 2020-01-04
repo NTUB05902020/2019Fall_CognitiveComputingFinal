@@ -1,1 +1,5 @@
 __pycache__/
+*.py[cod]
+test_errorRate*
+train_errorRate*
+*~

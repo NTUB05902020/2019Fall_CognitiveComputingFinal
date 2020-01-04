@@ -102,10 +102,10 @@ else:
     svm_model = SVC(kernel='rbf', probability=True)
 
 train_errorRate, test_errorRate = [], []
-if os.path.exists('train_errorRate.npy'):
-    train_errorRate = np.load('train_errorRate.npy').tolist()
-if os.path.exists('test_errorRate.npy'):
-    test_errorRate = np.load('test_errorRate.npy').tolist()
+if os.path.exists('train_errorRate{}.npy'.format(au_name)):
+    train_errorRate = np.load('train_errorRate{}.npy'.format(au_name)).tolist()
+if os.path.exists('test_errorRate{}.npy'.format(au_name)):
+    test_errorRate = np.load('test_errorRate{}.npy'.format(au_name)).tolist()
 
 # epoch可調
 epoch = 10
@@ -129,8 +129,8 @@ for i in range(epoch):
     print('{:.4f}    {:.4f}'.format(train_errorRate[-1], test_errorRate[-1]))
 with open(model_path, 'wb') as writer: pickle.dump(svm_model, writer)
 
-np.save('train_errorRate.npy', np.array(train_errorRate))
-np.save('test_errorRate.npy', np.array(test_errorRate))
+np.save('train_errorRate{}.npy'.format(au_name), np.array(train_errorRate))
+np.save('test_errorRate{}.npy'.format(au_name), np.array(test_errorRate))
 """
 from matplotlib import pyplot as plt
 plt.plot(train_errorRate, '.', label='train')
