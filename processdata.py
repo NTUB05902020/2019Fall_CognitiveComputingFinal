@@ -54,8 +54,8 @@ for index, file in dict_file.items():
 			dict_AU[elem.attrib['Number']].append(index)
 
 print(dict_AU)
-with open('dict_AU.json','w') as f:
-	json.dump(dict_AU,f)
+#with open('dict_AU.json','w') as f:
+#	json.dump(dict_AU,f)
 '''dest = "../MMI_arrange/"
 os.mkdir(dest)
 for AU_num in dict_AU.keys():
@@ -68,7 +68,7 @@ for AU_num in dict_AU.keys():
 			if os.path.isfile(full_file_name):
 				shutil.copy(full_file_name, dest + AU_num + '/' + index)'''
 
-'''import cv2
+import cv2
 dest = sys.argv[1]
 """for AU_num in dict_AU.keys():
 	for index in dict_AU[AU_num]:
@@ -95,7 +95,7 @@ for index in indice:
 			+ ' haarcascade_frontalface_default.xml haarcascade_eye.xml')
 		os.system('rm '+full_file_name)
 for index in indice:
-	os.system('python image_align.py '+ dest + index + '/')'''
+	os.system('python image_align.py '+ dest + index + '/')
 
 
 
