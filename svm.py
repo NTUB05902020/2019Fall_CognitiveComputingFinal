@@ -99,14 +99,14 @@ svm_model = None
 if os.path.exists(model_path):
     with open(model_path, 'rb') as reader: svm_model = pickle.load(reader)
 else:
-    svm_model = SVC(kernel='rbf', probability=True, verbose=True)
+    svm_model = SVC(kernel='rbf', probability=True)
 
 train_errorRate, test_errorRate = [], []
 print(trainX.shape, trainY.shape)
 # epoch可調
 epoch = 10
 for i in range(epoch):
-    print('epoch = {}'.format(i))
+    print('epoch = {}'.format(i), end='   ')
     time_seed = int(time())
     trainX, trainY = shuffle(trainX, trainY, random_state=time_seed)
     indStart, indEnd = 0, batchNum
@@ -122,10 +122,15 @@ for i in range(epoch):
     
     testY_ = svm_model.predict(testX)
     test_errorRate.append(np.count_nonzero(np.not_equal(testY,testY_)) / np.size(testY) * 100)
+    print('{.4f}    {.4f}'.format(train_errorRate, test_errorRate))
 with open(model_path, 'wb') as writer: pickle.dump(svm_model, writer)
 
+np.save('train_errorRate.npy', np.array(train_errorRate))
+np.save('test_errorRate.npy', np.array(test_errorRate))
+"""
 from matplotlib import pyplot as plt
 plt.plot(train_errorRate, '.', label='train')
 plt.plot(test_errorRate, '-', label='test')
 #plt.legend()
 plt.savefig('errorRate.png')
+"""
