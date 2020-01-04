@@ -79,7 +79,7 @@ for testn_vid in testn_vids:
     features = np.load(os.path.join(in_dir, '{}.npy'.format(testn_vid)))
     testX = np.append(testX, features, axis=0)
     testY, testnf_num = np.append(testY, np.zeros((features.shape[0],1))), testnf_num+features.shape[0]
-print('features          Pos       Neg')
+print('\nfeatures          Pos       Neg')
 print('Training:       {:>6d}    {:>6d}'.format(trainpf_num, trainnf_num))
 print(' Testing:       {:>6d}    {:>6d}'.format(testpf_num, testnf_num))
 
@@ -107,7 +107,6 @@ if os.path.exists('train_errorRate.npy'):
 if os.path.exists('test_errorRate.npy'):
     test_errorRate = np.load('test_errorRate.npy').tolist()
 
-print(trainX.shape, trainY.shape)
 # epoch可調
 epoch = 10
 for i in range(epoch):
