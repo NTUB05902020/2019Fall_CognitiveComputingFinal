@@ -79,6 +79,15 @@ for testn_vid in testn_vids:
     features = np.load(os.path.join(in_dir, '{}.npy'.format(testn_vid)))
     testX = np.append(testX, features, axis=0)
     testY, testnf_num = np.append(testY, np.zeros((features.shape[0],1))), testnf_num+features.shape[0]
+
+mean_x = np.sum(trainX, axis = 0) / np.size(trainX,0)
+var_x = np.var(trainX, axis = 0)
+var_x[var_x == 0] = 1e-10
+trainX = (trainX - mean_x) / np.sqrt(var_x)
+testX = (testX - mean_x) / np.sqrt(var_x)
+np.save(au_name + '_meanX.npy', mean_x)
+np.save(au_name + '_varX.npy', var_x)
+
 print('\nfeatures          Pos       Neg')
 print('Training:       {:>6d}    {:>6d}'.format(trainpf_num, trainnf_num))
 print(' Testing:       {:>6d}    {:>6d}'.format(testpf_num, testnf_num))
