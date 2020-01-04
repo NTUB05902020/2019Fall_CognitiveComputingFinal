@@ -62,8 +62,7 @@ print(' Testing:     {:>6d}    {:>6d}'.format(len(testp_vids), len(testn_vids)))
 
 feature_dim = np.load(os.path.join(in_dir, '{}.npy'.format(trainp_vids[0]))).shape[1]
 
-trainpX, trainnX, testX = np.empty((0,feature_dim)), np.empty((0,feature_dim))
-testX, testY = np.empty((0,feature_dim)), np.empty((0,1))
+trainpX, trainnX, testX = np.empty((0,feature_dim)), np.empty((0,feature_dim)), np.empty((0,feature_dim))
 testpf_num, testnf_num = 0, 0
 
 for trainp_vid in trainp_vids:
@@ -77,20 +76,19 @@ for trainn_vid in trainn_vids:
 for testp_vid in testp_vids:
     features = np.load(os.path.join(in_dir, '{}.npy'.format(testp_vid)))
     testX = np.append(testX, features, axis=0)
-    testY = np.append(testY, np.ones((features.shape[0],1)), axis=0)
     testpf_num += features.shape[0]
     
 for testn_vid in testn_vids:
     features = np.load(os.path.join(in_dir, '{}.npy'.format(testn_vid)))
     testX = np.append(testX, features, axis=0)
-    testY = np.append(testY, np.ones((features.shape[0],1)), axis=0)
     testnf_num += features.shape[0]
 
+testY = np.append(np.ones(testpf_num), np.zeros(testnf_num))
 trainpf_num, trainnf_num = trainpX.shape[0], trainnX.shape[0]
-trainX, trainY = np.append(trainpX, trainnX), np.append(np.ones((trainpf_num,1)), np.zeros((trainnf_num,1)))
+trainX, trainY = np.append(trainpX, trainnX, axis=0), np.append(np.ones((trainpf_num,1)), np.zeros((trainnf_num,1)), axis=0)
 
 mean_x, var_x = np.mean(trainX, axis=0), np.var(trainX, axis=0)
-var_x[var_x == 0] = 1e-10
+var_x[var_x==0] = 1e-10
 std_x = np.sqrt(var_x)
 
 trainpX = (trainpX-mean_x) / std_x
@@ -106,11 +104,10 @@ print(' Testing:       {:>6d}    {:>6d}'.format(testpf_num, testnf_num))
 try:
     batchNum = int(sys.argv[6])
 except IndexError:
-    batchNum = 128
+    batchNum = 4
 print('\nBatchNum:  {:>4d}\n'.format(batchNum))
 
-dividedp, batchSizep = trainpX.shape[0]&batchNum == 0, trainpX.shape[0]//batchNum
-dividedn, batchSizen = trainnX.shape[0]&batchNum == 0, trainnX.shape[0]//batchNum
+batchSizep, batchSizen = trainpX.shape[0]//batchNum, trainnX.shape[0]//batchNum
 
 from time import time
 import pickle
@@ -132,7 +129,7 @@ if os.path.exists('test_errorRate{}.npy'.format(au_name)):
 # epoch可調
 epoch = 20
 for i in range(epoch):
-    print('epoch = {}'.format(i), end='   ')
+    print('epoch = {}'.format(i), end='    ')
     time_seed = int(time())
     trainpX = shuffle(trainpX, random_state=time_seed)
     trainnX = shuffle(trainnX, random_state=time_seed)
@@ -141,25 +138,25 @@ for i in range(epoch):
     indSn, indEn = 0, batchSizen
     
     for j in range(1,batchNum):
-        X = trainpX[indSp:indEp] + trainnX[indSn:indEn]
-        Y = np.append(np.ones((batchSizep,1)), np.zeros((batchSizen,1)))
-        indSp, indEp = indSp+batchSizep, indEp+batchSizep
-        indSn, indEn = indSp+batchSizen, indEn+batchSizen
+        X = np.append(trainpX[indSp:indEp,:], trainnX[indSn:indEn], axis=0)
+        Y = np.append(np.ones(batchSizep), np.zeros(batchSizen), axis=0)
+
+        indSp, indSn = indEp, indEn
+        indEp, indEn = indSp+batchSizep, indSn+batchSizen
         svm_model.fit(X, Y)
     
-    if not divided:
-        X = trainpX[indSp:] + trainnX[indSn:]
-        Y = np.append(np.ones(trainpX.shape[0]-indSp), np.zeros(trainnX.shape[0]-indSn))
-        svm_model.fit(X, Y)
+    X = np.append(trainpX[indSp:,:], trainnX[indSn:,:], axis=0)
+    Y = np.append(np.ones(trainpX.shape[0]-indSp), np.zeros(trainnX.shape[0]-indSn), axis=0)
+    svm_model.fit(X, Y)
     
-    trainY_ = svm_model.predict(trainX)
+    trainY_ = np.reshape(svm_model.predict(trainX), (-1,1))
     train_errorRate.append(np.count_nonzero(np.not_equal(trainY, trainY_)) / np.size(trainY) * 100)
     
     testY_ = svm_model.predict(testX)
     test_errorRate.append(np.count_nonzero(np.not_equal(testY,testY_)) / np.size(testY) * 100)
     print('{:.4f}    {:.4f}'.format(train_errorRate[-1], test_errorRate[-1]))
-with open(model_path, 'wb') as writer: pickle.dump(svm_model, writer)
 
+with open(model_path, 'wb') as writer: pickle.dump(svm_model, writer)
 np.save('train_errorRate{}.npy'.format(au_name), np.array(train_errorRate))
 np.save('test_errorRate{}.npy'.format(au_name), np.array(test_errorRate))
 """
