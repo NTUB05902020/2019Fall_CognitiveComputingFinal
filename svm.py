@@ -45,8 +45,9 @@ else:
         else: n_vids.append(vid)
     
     p_num, n_num = len(p_vids), len(n_vids)
-    testp_num, testn_num = p_num//8, n_num//8
-    trainp_num, trainn_num = p_num-testp_num, n_num-testn_num
+    min_num = min(p_num, n_num)
+    trainp_num, trainn_num = min_num//8 * 7, min_num//8 * 7
+    testp_num, testn_num = p_num-trainp_num, n_num-trainn_num
     
     trainp_vids, testp_vids = p_vids[:trainp_num], p_vids[trainp_num:]
     trainn_vids, testn_vids = n_vids[:trainn_num], n_vids[trainn_num:]
@@ -79,6 +80,15 @@ for testn_vid in testn_vids:
     features = np.load(os.path.join(in_dir, '{}.npy'.format(testn_vid)))
     testX = np.append(testX, features, axis=0)
     testY, testnf_num = np.append(testY, np.zeros((features.shape[0],1))), testnf_num+features.shape[0]
+
+mean_x = np.sum(trainX, axis = 0) / np.size(trainX,0)
+var_x = np.var(trainX, axis = 0)
+var_x[var_x == 0] = 1e-10
+trainX = (trainX - mean_x) / np.sqrt(var_x)
+testX = (testX - mean_x) / np.sqrt(var_x)
+np.save(au_name + '_meanX.npy', mean_x)
+np.save(au_name + '_varX.npy', var_x)
+
 print('\nfeatures          Pos       Neg')
 print('Training:       {:>6d}    {:>6d}'.format(trainpf_num, trainnf_num))
 print(' Testing:       {:>6d}    {:>6d}'.format(testpf_num, testnf_num))
@@ -108,7 +118,7 @@ if os.path.exists('test_errorRate{}.npy'.format(au_name)):
     test_errorRate = np.load('test_errorRate{}.npy'.format(au_name)).tolist()
 
 # epoch可調
-epoch = 10
+epoch = 20
 for i in range(epoch):
     print('epoch = {}'.format(i), end='   ')
     time_seed = int(time())
