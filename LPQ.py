@@ -89,7 +89,7 @@ class LPQ(object):
 
         return h
     
-    def blockshaped(arr, nrows, ncols):
+    def blockshaped(self, arr, nrows, ncols):
         h, w = arr.shape
         assert h % nrows == 0, "{} rows is not evenly divisble by {}".format(h, nrows)
         assert w % ncols == 0, "{} cols is not evenly divisble by {}".format(w, ncols)
@@ -104,7 +104,7 @@ class LPQ(object):
         img = np.hstack([img, np.zeros([h, pad_weight-w])])
         img = np.vstack([img, np.zeros([pad_height - h, pad_weight])])
         
-        all_hist, blocks = [], blockshaped(img, pad_height//10, pad_weight//10)
+        all_hist, blocks = [], self.blockshaped(img, pad_height//10, pad_weight//10)
         for block in blocks:
             LPQ = self.getFeature(block)
             LPQ.resize((256))
