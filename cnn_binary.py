@@ -16,20 +16,24 @@ import os
 import cv2
 
 try:
-    json_path, in_dir, model_path = str(sys.argv[1]), str(sys.argv[2])+ 'Sessions/', str(sys.argv[3])
+    au_name, json_path, in_dir, model_path = str(sys.argv[1]), str(sys.argv[2]), str(sys.argv[3])+ 'Sessions/', str(sys.argv[4])
 except IndexError:
-    print('Format: python {} [json_path] [in_dir] [model_path]'.format(sys.argv[0]))
-    print('      : python {} [json_path] [in_dir] [model_path] [batchSize]'.format(sys.argv[0]))
+    print('Format: python {} [au_name] [json_path] [in_dir] [model_path]'.format(sys.argv[0]))
+    print('      : python {} [au_name] [json_path] [in_dir] [model_path] [batchSize]'.format(sys.argv[0]))
     sys.exit(1)
 
 au2vids = None
 with open(json_path,'r') as reader: au2vids = json.loads(reader.read())
+if au_name not in au2vids:
+    print('action unit {} does not exist'.format(au_name))
+    sys.exit(1)
 
 trainX, trainY = [], []
+isPos = set(au2vids[au_name])
 _, indice, _ = list(os.walk(in_dir))[0]
 for index in indice:
     in_path = in_dir + index + '/aligned/'
-    ##print(in_path)
+    print(in_path)
     if not os.path.exists(in_path):
         in_path = in_dir + index
     
@@ -43,27 +47,15 @@ for index in indice:
         img = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
         img = cv2.resize(img, (128, 128), interpolation=cv2.INTER_CUBIC)
         trainX.append(img)
-        y = []
-        for au_name in ['1','4','6','12','15']:
-            isPos = set(au2vids[au_name])
-            if index in isPos:
-                y.append(1)
-            else: y.append(0)
-        y = np.array(y)
-        trainY.append(y)
+        if index in isPos:
+            trainY.append(1)
+        else: trainY.append(0)
     #imgs = imgs.reshape((imgs.shape[0],imgs.shape[1],imgs.shape[2],1))
 
 trainX = np.array(trainX).reshape((-1,128,128,1))
 trainY = np.array(trainY)
 trainX, testX, trainY, testY = train_test_split(trainX, trainY, test_size = 0.2)
-np.save('trainX.npy',trainX)
-np.save('trainY.npy',trainY)
-np.save('testX.npy',testX)
-np.save('testY.npy',testY)
-trainX = np.load('trainX.npy')
-trainY = np.load('trainY.npy')
-testX = np.load('testX.npy')
-testY = np.load('testY.npy')
+
 #--------動以下就好--------
 datagen = ImageDataGenerator(rotation_range=30, \
                              width_shift_range=0.2,\
@@ -111,10 +103,10 @@ model.add(Dense(1024, activation='relu'))
 model.add(BatchNormalization(axis = -1,momentum=0.5))
 model.add(Dropout(0.5))
 model.add(Dense(256, activation='relu'))
-model.add(Dense(5, activation='softmax')) 
+model.add(Dense(1, activation='sigmoid')) 
 print(model.summary())
 optim = Adam(lr = 0.001)
-model.compile(loss='categorical_crossentropy', optimizer=optim, metrics=['accuracy']) 
+model.compile(loss='binary_crossentropy', optimizer=optim, metrics=['accuracy']) 
 #print(model.summary())
 callbacks = []
 csvLogger = CSVLogger("log_cnn{}.csv".format(au_name), separator=",", append=True)
