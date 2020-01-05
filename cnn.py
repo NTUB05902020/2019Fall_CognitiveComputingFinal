@@ -57,9 +57,13 @@ trainY = np.array(trainY)
 trainX, testX, trainY, testY = train_test_split(trainX, trainY, test_size = 0.2)
 
 #--------動以下就好--------
-datagen = ImageDataGenerator(rotation_range=30,width_shift_range=0.2,\
-height_shift_range=0.2,shear_range=0.1,zoom_range=[0.8,1.2],\
-fill_mode='constant', horizontal_flip=True)
+datagen = ImageDataGenerator(rotation_range=30, \
+                             width_shift_range=0.2,\
+                             height_shift_range=0.2, \
+                             shear_range=0.1, \
+                             zoom_range=[0.8,1.2],\
+                             fill_mode='constant', \
+                             horizontal_flip=True)
 datagen.fit(trainX)
 model = Sequential()
 #Layer 0
@@ -105,7 +109,7 @@ optim = Adam(lr = 0.001)
 model.compile(loss='binary_crossentropy', optimizer=optim, metrics=['accuracy']) 
 #print(model.summary())
 callbacks = []
-csvLogger = CSVLogger("log_cnn.csv", separator=",", append=True)
+csvLogger = CSVLogger("log_cnn{}.csv".format(au_name), separator=",", append=True)
 callbacks.append(csvLogger)
 '''
 train_history = model.fit(train_x,train_y, batch_size = 640, callbacks=callbacks,\
@@ -113,6 +117,13 @@ validation_data = (val_x,val_y), epochs=50, verbose=1, shuffle = True)
 '''
 
 train_history = model.fit_generator(datagen.flow(trainX, trainY, batch_size=64),\
-steps_per_epoch=5*len(trainX)/64, epochs=50, verbose=1, shuffle = True,\
-validation_data = (testX,testY), callbacks = callbacks)  
+                                    steps_per_epoch = 5 * len(trainX)/64, \
+                                    epochs=50, \
+                                    verbose=1, \
+                                    shuffle = True, \
+                                    validation_data = (testX,testY), \
+                                    callbacks = callbacks) 
+
 model.save(model_path)
+print("model saved in {}".format(model_path))
+print("result saved in log_cnn{}.csv".format(au_name))
