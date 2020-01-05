@@ -112,8 +112,8 @@ while True:
         else:
             faces = sorted(list(faces), key = lambda face: face[0])
             (x0,y0,w0,h0), (x1,y1,w1,h1) = faces[0], faces[1]
-            eyes0 = removeGlasses(sorted(eye_cascade.detectMultiScale(gray_frame[y0:y0+h0,x0:x0+w0]), key = lambda e: e[2]+e[3]))
-            eyes1 = removeGlasses(sorted(eye_cascade.detectMultiScale(gray_frame[y1:y1+h1,x1:x1+w1]), key = lambda e: e[2]+e[3]))
+            eyes0 = removeGlasses(sorted(eye_cascade.detectMultiScale(gray_frame[y0:y0+h0,x0:x0+w0]), key = lambda e: e[2]*e[3]))
+            eyes1 = removeGlasses(sorted(eye_cascade.detectMultiScale(gray_frame[y1:y1+h1,x1:x1+w1]), key = lambda e: e[2]*e[3]))
             if len(eyes0) < 2:
                 if len(eyes1) >= 2:
                     face_leftright = 1
