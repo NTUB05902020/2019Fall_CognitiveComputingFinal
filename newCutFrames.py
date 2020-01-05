@@ -112,16 +112,29 @@ while True:
         else:
             faces = sorted(list(faces), key = lambda face: face[0])
             (x0,y0,w0,h0), (x1,y1,w1,h1) = faces[0], faces[1]
-            eyes0 = removeGlasses(sorted(eye_cascade.detectMultiScale(gray_frame[y0:y0+h0,x0:x0+w0]), key = lambda e: e[2]*e[3]))
-            eyes1 = removeGlasses(sorted(eye_cascade.detectMultiScale(gray_frame[y1:y1+h1,x1:x1+w1]), key = lambda e: e[2]*e[3]))
-            if len(eyes0) < 2:
-                if len(eyes1) >= 2:
+
+            eyes0 = eye_cascade.detectMultiScale(gray_frame[y0:y0+h0,x0:x0+w0])
+            eyes1 = eye_cascade.detectMultiScale(gray_frame[y1:y1+h1,x1:x1+w1])
+            if len(eyes0) == 0:
+                if len(eyes1) == 0:
+                    print('Two faces both don\'t have eyes')
+                else:
                     face_leftright = 1
                     break
+            elif len(eyes1) == 0:
+                face_leftright = 0
+                break
             else:
-                if len(eyes1) < 2:
-                    face_leftright = 0
-                    break
+                eyes0 = removeGlasses(sorted(eyes0, key = lambda e: e[2]*e[3]))
+                eyes1 = removeGlasses(sorted(eyes1, key = lambda e: e[2]*e[3]))
+                if len(eyes0) < 2:
+                    if len(eyes1) >= 2:
+                        face_leftright = 1
+                        break
+                else:
+                    if len(eyes1) < 2:
+                        face_leftright = 0
+                        break
             print('Still can\'t judge left_right in two-face frame')
     else:
         print('Cant\t find orientation before video end!')
