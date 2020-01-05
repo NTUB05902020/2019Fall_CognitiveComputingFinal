@@ -22,7 +22,7 @@ except IndexError:
     print('      : python {} [json_path] [in_dir] [model_path] [batchSize]'.format(sys.argv[0]))
     sys.exit(1)
 
-au2vids = None
+"""au2vids = None
 with open(json_path,'r') as reader: au2vids = json.loads(reader.read())
 
 trainX, trainY = [], []
@@ -59,7 +59,7 @@ trainX, testX, trainY, testY = train_test_split(trainX, trainY, test_size = 0.2)
 np.save('trainX.npy',trainX)
 np.save('trainY.npy',trainY)
 np.save('testX.npy',testX)
-np.save('testY.npy',testY)
+np.save('testY.npy',testY)"""
 trainX = np.load('trainX.npy')
 trainY = np.load('trainY.npy')
 testX = np.load('testX.npy')
@@ -121,6 +121,6 @@ validation_data = (val_x,val_y), epochs=50, verbose=1, shuffle = True)
 '''
 
 train_history = model.fit_generator(datagen.flow(trainX, trainY, batch_size=64),\
-steps_per_epoch=5*len(trainX)/64, epochs=50, verbose=1, shuffle = True,\
+steps_per_epoch=5*len(trainX)/64, epochs=100, verbose=1, shuffle = True,\
 validation_data = (testX,testY), callbacks = callbacks)  
 model.save(model_path)
